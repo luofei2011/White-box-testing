@@ -19,8 +19,7 @@ string order_out = "";
 typedef struct  arcNode{
         int tail,head;  //弧的尾结点和头结点的位置
         struct arcNode *hlink, *tlink;      //弧头或弧尾相同的弧链表
-        char judge;   //T/F/N   
-        bool is_go;  
+        char judge;   //T/F/N    
 }arcNode;
 
 typedef struct vexNode{
@@ -110,7 +109,6 @@ void CreateGraph(Graph *G){
              arcTemp->hlink = (*G).list[_head].fin;
              (*G).list[_head].fin = arcTemp;
              arcTemp->judge = Judge[i]; 
-             arcTemp->is_go = false;
              G->anum++;                       
      } 
 }
@@ -120,10 +118,6 @@ void display(Graph *G,int arr[]){
      char ch[10];
      int temp =0;
      char is_no = 'N';
-    // for(int i=0; i<length(arr)-1; i++){
-     //        if((!G->list[arr[i]].fout->is_go) && (G->list[arr[i]].fout->tail == G->list[arr[i+1]].data))        
-    //                is_no = 'Y';
-    // }
      for(int i=0; i<length(arr)-1; i++){
              string Arc = "";
              temp = arr[i];
@@ -133,8 +127,7 @@ void display(Graph *G,int arr[]){
              temp = arr[i+1];
              snprintf(ch,sizeof(ch),"%d",temp);
              Arc += ch;
-             if(order_out.find(Arc) != order_out.npos)
-                      // is_no = 'Y';  
+             if(order_out.find(Arc) != order_out.npos) 
                       continue;
              else{
                  is_no = 'Y';
@@ -143,24 +136,21 @@ void display(Graph *G,int arr[]){
              i += 1;     
      }
      if(is_no == 'Y'){
+              memset(ch,0,10);
      for(int i=0; i<length(arr)-1; i++){
              temp = arr[i];
-             //itoa(arr[i],ch,10);
              snprintf(ch,sizeof(ch),"%d",temp);
              order_out += ch;
              order_out += ",";
      }
      memset(ch,0,10);
-     //itoa(arr[length(arr)-1],ch,10);
      snprintf(ch,sizeof(ch),"%d",arr[length(arr)-1]);
      order_out += ch;
-     //以","分开每个路径结点；以"|"分开没条基本路径 
      order_out += "|"; 
      }
 }
 
 int my_memset(int arr[],int _data){
-    // CC++;
      int pos = 0;
      int _length = length(arr);
      for(int i=0; i<_length; i++)
@@ -175,11 +165,30 @@ int my_memset(int arr[],int _data){
      return pos;  
 }
 
+void changeVisited(Graph *G,int arr[], int num){
+     char is_find_ = 'N';
+     int pos =0;
+     for(int i=0; i<length(arr); i++){
+             if(arr[i] == num){
+                       is_find_ = 'Y';
+                       i++;          
+             }    
+             if(arr[i] != 0)
+                       if(is_find_ == 'Y'){    
+                                pos = LocateVex(G,arr[i]);
+                               // cout << "pos:" << pos << endl;
+                                G->list[pos].visited = false;
+                               // cout << "data:" << G->list[pos].data << endl;
+                       }
+     }     
+}
+
 //有向图的深度非递归遍历 
 void DFSTraverse(Graph G, int pos){
      arcNode *p;
     // int _pos = 0; //记录不同路径的分离点 
      arcNode *Queue[MAX*MAX];
+     int Vex[MAX]={0};
      int _len_=0;
      int queue = -1;
      int pointer = -1;
@@ -190,18 +199,28 @@ void DFSTraverse(Graph G, int pos){
            return;
      }
      while(p){ 
-         //  p->is_go = true;
            if(!is_inArr(basic_path,G.list[p->tail].data))
                   basic_path[++pointer] = G.list[p->tail].data;
-           if((p->judge == 'T') || (p->judge == 'F')){ 
+           if(p->judge != 'N'){ 
                   if((p->judge == 'T') && (!G.list[p->tail].visited)){
+                // if(p->judge == 'T'){
                          Queue[++queue] = p;
                          p = p->tlink;
                   }
                   else if(p->judge == 'F')
                        Queue[++queue] = p->tlink; 
-                  G.list[p->tail].visited = true; 
-           }
+                  G.list[p->tail].visited = true;
+                  if(!is_inArr(Vex,G.list[p->tail].data))
+                       Vex[_len_++] = G.list[p->tail].data; 
+           }/*
+           else{
+                if(p->tlink){
+                      Queue[++queue] = p->tlink;
+                      p = p->tlink;
+                      cout << G.list[p->head].data << endl;
+                      continue;             
+                }     
+           }*/
            //统一记录下值 
            if(is_inArr(basic_path,G.list[p->head].data)){
                   basic_path[++pointer] = G.list[p->head].data;  
@@ -210,6 +229,7 @@ void DFSTraverse(Graph G, int pos){
                                 p = Queue[queue];
                                 queue --; 
                                 pointer = my_memset(basic_path,G.list[p->tail].data);     
+                                changeVisited(&G,Vex,G.list[p->tail].data);
                   }
                   //不加else会导致死循环，因为到最后一层的时候数组为空。直接把头结点加入到循环队列中 
                   else{  
@@ -219,6 +239,7 @@ void DFSTraverse(Graph G, int pos){
                   continue;                                            
            }
            basic_path[++pointer] = G.list[p->head].data;
+          // cout << "********************" << G.list[p->head].data << endl;
            pos = LocateVex(&G,G.list[p->head].data);
            p = G.list[pos].fout;
            if(!p){
@@ -227,6 +248,7 @@ void DFSTraverse(Graph G, int pos){
                       p = Queue[queue];
                       queue --;  
                       pointer = my_memset(basic_path,G.list[p->tail].data);
+                      changeVisited(&G,Vex,G.list[p->tail].data);
                 }
                 else{
                      display(&G,basic_path);
@@ -234,7 +256,10 @@ void DFSTraverse(Graph G, int pos){
                 }
            }
            
-     }
+     }/*
+     for(int i=0; i<length(Vex);i++)
+             cout << Vex[i];
+    cout << endl;*/
 }
 
 void showchar(string str){
@@ -243,52 +268,10 @@ void showchar(string str){
      cout << endl;     
 }
 
-//按序输出基本路径 
-/*
-void orderDisplay(string str){
-    // cout << str << endl;
-     cout << "CC=" << CC+1 << endl;
-     string _str = str;
-     string small = str;
-     string temp = "";
-     char is_end = 'N';
-     int pos = str.find('|');
-     while(str.size()){
-     for(int i=0; i<_str.size(); i++){
-           temp = _str.substr(0,pos);
-           if(small.size() > temp.size())
-                 small = temp;
-           else if(small.size() == temp.size())
-                 if(small.compare(temp) > 0)
-                       small = temp; 
-           if(is_end == 'N'){
-                _str = _str.substr(pos+1);  
-                pos = _str.find('|');
-                if(pos != _str.npos)
-                     continue;
-                else{
-                     pos = _str.size();
-                     is_end = 'Y';     
-                } 
-           } 
-           else
-               break;   
-     }
-     //cout << small << endl;
-     showchar(small);
-     int _pos = str.find(small);
-     str.replace(_pos,small.size()+1,"");
-     _str = small = str;
-     pos = str.find('|');
-     is_end = 'N';
-     }       
-}
-*/
-
-int returnNum(string str){
+int returnNum(string str,char ch){
     int sum =0;
     while(str.size()){
-          int pos = str.find(',');
+          int pos = str.find(ch);
           if(pos != str.npos){
                str = str.substr(pos+1);
                sum++; 
@@ -300,59 +283,13 @@ int returnNum(string str){
         
 }
 
-bool is_contain(string big,string small){
-    for(int i=0; i<small.size()-2; i++){
-            string Arc = "";
-            Arc += small[i];
-            Arc += small[i+1];
-            Arc += small[i+2];
-            if(big.find(Arc) != big.npos)
-                             continue;
-            else
-                return false; 
-            i+=2;       
-    }
-    return true;
-}
-
 void remove_(string str){
      int pos = order_out.find(str);
      order_out.replace(pos,str.size()+1,"");     
 }
 
-void out(){
-     string str_1 = order_out;
-     string str_2 = order_out;
-     int pos_1 = str_1.find('|');
-     string temp = str_1;
-     while(str_1.size()){
-              temp = str_1.substr(0,pos_1);
-              int _pos = str_1.find(temp);
-              str_2.replace(_pos,temp.size()+1,"");  
-              string cmp = str_2;
-              int pos_2 = str_2.find('|');
-              while(str_2.size()){
-                     cmp = str_2.substr(0,pos_2); 
-                     if(cmp.size() < temp.size()){
-                             if(is_contain(temp,cmp))
-                                     remove_(cmp);      
-                     }
-                     else if (cmp.size() > temp.size()){
-                             if(is_contain(cmp,temp))
-                                     remove_(temp);
-                     }
-                     str_2 = str_2.substr(pos_2+1);
-                     pos_2 = str_2.find('|');                 
-              }         
-              str_1 = str_1.substr(pos_1+1);
-              pos_1 = str_1.find('|');        
-     }     
-}
-
 void orderDisplay(string str){
-    // out();
-     //cout << str << endl;
-     cout << "CC=" << CC+1 << endl;
+     cout << "CC=" << returnNum(str,'|')-1 << endl;
      string _str = str;
      string small = str;
      int small_num = 100;
@@ -362,18 +299,14 @@ void orderDisplay(string str){
      while(str.size()){
      for(int i=0; i<_str.size(); i++){
            temp = _str.substr(0,pos);
-           if(returnNum(temp) < small_num){
-              //   if(!is_contain(temp)){
+           if(returnNum(temp,',') < small_num){
                         small = temp;
-                        small_num = returnNum(temp);
-                // }
+                        small_num = returnNum(temp,',');
            }
-           else if(returnNum(temp) == small_num)
+           else if(returnNum(temp,',') == small_num)
                  if(small.compare(temp) > 0){
-                    //   if(!is_contain(temp)){
                               small = temp; 
-                              small_num = returnNum(temp);
-                     //  }
+                              small_num = returnNum(temp,',');
                  }
            if(is_end == 'N'){
                 _str = _str.substr(pos+1);  
@@ -458,15 +391,11 @@ int main(){
     Graph G;
     int i=0;
     string temp ="";
-    string _head = "";
     int _header = 0;
     getline(cin,temp);
     if(temp == "END")
             return 0;
-    for(int k=0; k<temp.size(); k++)
-            if((temp[k] >= '0') && (temp[k] <= '9'))
-                  _head += temp[k];
-    vexArr[i++] = atoi(_head.c_str());
+    vexArr[i++] = atoi(temp.c_str());
     while(1){
              getline(cin,temp);
              if(temp == "EXT" || temp == "ext")
@@ -482,19 +411,9 @@ int main(){
                             break;
                       CreatePath(temp);         
              }
-             /*
-    for(int i=0;i<length(vexArr);i++)
-            cout << vexArr[i] << endl;
-    for(int i=0; i<length(arcTail);i++)
-    {
-            cout << arcTail[i] << "->";
-            cout << arcHead[i] << ",";
-            cout << Judge[i] << endl;        
-    }
-    */
     CreateGraph(&G);
     DFSTraverse(G,LocateVex(&G,vexArr[0]));
     orderDisplay(order_out);
-    system("pause");
+    //system("pause");
     return 0;   
 }
