@@ -15,6 +15,7 @@ int basic_path[MAX];//存储基本路径，并实时更新
 int CC = 0; //圈复杂度：（1）判定结点数+1；（2）e(边)-n(结点)+2 
 char is_EXT = 'N';
 string order_out = "";
+//string ordered = "";
 
 typedef struct  arcNode{
         int tail,head;  //弧的尾结点和头结点的位置
@@ -259,12 +260,6 @@ void DFSTraverse(Graph G, int pos){
     cout << endl;*/
 }
 
-void showchar(string str){
-     for(int i=0; i<str.size(); i++)
-             cout << str[i];
-     cout << endl;     
-}
-
 int returnNum(string str,char ch){
     int sum =0;
     while(str.size()){
@@ -285,8 +280,32 @@ void remove_(string str){
      order_out.replace(pos,str.size()+1,"");     
 }
 
+bool my_compare(string str1,string str2){
+     //cout << str1 << endl;
+     //cout << str2 << endl;
+     str1 += ",";
+     str2 += ",";
+     string temp1 = "";
+     string temp2 = "";
+     int pos1 = str1.find(',');
+     int pos2 = str2.find(',');
+     while(str1.size()){
+              temp1 = str1.substr(0,pos1);
+              temp2 = str2.substr(0,pos2);
+              if(atoi(temp1.c_str()) > atoi(temp2.c_str()))
+                      return true;  
+              else if(atoi(temp1.c_str()) < atoi(temp2.c_str()))
+                  return false;
+              str1 = str1.substr(pos1+1);
+              pos1 = str1.find(',');
+              str2 = str2.substr(pos2+1);  
+              pos2 = str2.find(',');                
+     }     
+}
+
 void orderDisplay(string str){
-     cout << "CC=" << returnNum(str,'|')-1 << endl;
+     //cout << "CC=" << returnNum(str,'|')-1 << endl;
+     string ordered = "";
      string _str = str;
      string small = str;
      int small_num = 100;
@@ -301,7 +320,7 @@ void orderDisplay(string str){
                         small_num = returnNum(temp,',');
            }
            else if(returnNum(temp,',') == small_num)
-                 if(small.compare(temp) > 0){
+                 if(my_compare(small,temp)){
                               small = temp; 
                               small_num = returnNum(temp,',');
                  }
@@ -319,16 +338,29 @@ void orderDisplay(string str){
                break;   
      }
      //cout << small << endl;
-     showchar(small);
-    // CC++;
+     ordered += small;
+     ordered += "|";
      int _pos = str.find(small);
      str.replace(_pos,small.size()+1,"");
      _str = small = str;
      small_num =100;
      pos = str.find('|');
      is_end = 'N';
-     }       
+     }     
+     order_out = ordered;  
 }
+
+void coutResult(string str){
+     int pos = str.find('|');
+     string temp;
+     while(str.size()){
+              temp = str.substr(0,pos);
+              cout << temp << endl;
+              str = str.substr(pos+1);
+              pos = str.find('|');                  
+     }
+}
+
 void changeVexArr(int num){
      for(int i=0; i<length(vexArr); i++)
              if(vexArr[i] == num){
@@ -383,14 +415,14 @@ void CreatePath(string str){
            Judge[_into] = 'T';
      }
 }
-/*
+
 void xianshi(){
     for(int i=0; i<length(vexArr); i++)
             cout << vexArr[i] << endl;
     for(int i=0; i<length(arcTail); i++)
             cout << arcTail[i] << "->" << arcHead[i] << "," << Judge[i] << endl;     
 }
-*/
+
 int main(){
     Graph G;
     int i=0;
@@ -417,9 +449,14 @@ int main(){
                      // xianshi();        
              }
     //cout << "yes" << endl;
+    //xianshi();
     CreateGraph(&G);
     DFSTraverse(G,LocateVex(&G,vexArr[0]));
+    cout << "CC=" << returnNum(order_out,'|')-1 << endl;
+    for(int i=0;i<10;i++)
     orderDisplay(order_out);
+    coutResult(order_out);
+    //orderDisplay(ordered);
     //system("pause");
     return 0;   
 }
