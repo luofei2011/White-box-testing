@@ -3,7 +3,7 @@
 #include<malloc.h>
 #include<string>
 #include<cstring>
-#define MAX 100 //允许输入的最大结点数
+#define MAX 512 //允许输入的最大结点数
 using namespace std;
 
 //char arcArr[MAX][MAX]={'\0'};
@@ -202,6 +202,7 @@ void DFSTraverse(Graph G, int pos){
            if(!is_inArr(basic_path,G.list[p->tail].data))
                   basic_path[++pointer] = G.list[p->tail].data;
            if(p->judge != 'N'){ 
+                       //若遇到先前遍历过的结点则直接走F就行，T不予考虑 
                   if(is_inArr(Vex,G.list[p->tail].data) && (!G.list[p->tail].visited)){
                             if(p->judge == 'T')
                                         p = p->tlink;
@@ -236,7 +237,6 @@ void DFSTraverse(Graph G, int pos){
                   continue;                                            
            }
            basic_path[++pointer] = G.list[p->head].data;
-          // cout << "********************" << G.list[p->head].data << endl;
            pos = LocateVex(&G,G.list[p->head].data);
            p = G.list[pos].fout;
            if(!p){
@@ -351,9 +351,9 @@ void CreatePath(string str){
                    if(arcHead[i] == _num)
                           _in[l_l++] = i;                    
      for(int j=0; j<l; j++){
-                   if(Judge[j] == 'F')
+                   if((Judge[j] == 'F') && (arcTail[j] == _num))
                         _F = j;
-                   else if(Judge[j] == 'T') 
+                   else if((Judge[j] == 'T') && (arcTail[j] == _num)) 
                         _T = j;                            
      }
      for(int i=0; i<l_l; i++)
@@ -383,7 +383,14 @@ void CreatePath(string str){
            Judge[_into] = 'T';
      }
 }
-
+/*
+void xianshi(){
+    for(int i=0; i<length(vexArr); i++)
+            cout << vexArr[i] << endl;
+    for(int i=0; i<length(arcTail); i++)
+            cout << arcTail[i] << "->" << arcHead[i] << "," << Judge[i] << endl;     
+}
+*/
 int main(){
     Graph G;
     int i=0;
@@ -406,8 +413,10 @@ int main(){
                       getline(cin,temp);
                       if(is_end(temp))
                             break;
-                      CreatePath(temp);         
+                      CreatePath(temp); 
+                     // xianshi();        
              }
+    //cout << "yes" << endl;
     CreateGraph(&G);
     DFSTraverse(G,LocateVex(&G,vexArr[0]));
     orderDisplay(order_out);
