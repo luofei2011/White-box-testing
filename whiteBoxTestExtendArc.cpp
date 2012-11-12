@@ -202,26 +202,23 @@ void DFSTraverse(Graph G, int pos){
            if(!is_inArr(basic_path,G.list[p->tail].data))
                   basic_path[++pointer] = G.list[p->tail].data;
            if(p->judge != 'N'){ 
-                  if((p->judge == 'T') && (!G.list[p->tail].visited)){
-                // if(p->judge == 'T'){
-                         Queue[++queue] = p;
-                         p = p->tlink;
+                  if(is_inArr(Vex,G.list[p->tail].data) && (!G.list[p->tail].visited)){
+                            if(p->judge == 'T')
+                                        p = p->tlink;
                   }
-                  else if(p->judge == 'F')
-                       Queue[++queue] = p->tlink; 
-                  G.list[p->tail].visited = true;
-                  if(!is_inArr(Vex,G.list[p->tail].data))
-                       Vex[_len_++] = G.list[p->tail].data; 
-           }/*
-           else{
-                if(p->tlink){
-                      Queue[++queue] = p->tlink;
-                      p = p->tlink;
-                      cout << G.list[p->head].data << endl;
-                      continue;             
-                }     
-           }*/
-           //统一记录下值 
+                  else{
+                       if((p->judge == 'T') && (!G.list[p->tail].visited)){
+                       // if(p->judge == 'T'){
+                             Queue[++queue] = p;
+                             p = p->tlink;
+                       }
+                       else if(p->judge == 'F')
+                            Queue[++queue] = p->tlink; 
+                       G.list[p->tail].visited = true;
+                       if(!is_inArr(Vex,G.list[p->tail].data))
+                            Vex[_len_++] = G.list[p->tail].data; 
+                  }
+           }
            if(is_inArr(basic_path,G.list[p->head].data)){
                   basic_path[++pointer] = G.list[p->head].data;  
                   if(queue >= 0){ 
